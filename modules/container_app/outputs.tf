@@ -5,7 +5,7 @@ output "container_app_id" {
 
 output "container_app_url" {
   description = "URL of the Container App"
-  value       = "https://${azurerm_container_app.main.latest_revision_fqdn}"
+  value       = azurerm_container_app.main.latest_revision_fqdn
 }
 
 output "environment_id" {

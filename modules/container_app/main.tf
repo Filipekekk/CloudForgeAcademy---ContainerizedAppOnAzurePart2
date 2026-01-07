@@ -1,6 +1,6 @@
 # Create Container App Environment
 resource "azurerm_container_app_environment" "main" {
-  name                = "container-app-environment"
+  name                = "container-app-env"
   location            = var.location
   resource_group_name = var.resource_group_name
   log_analytics_workspace_id = var.log_analytics_workspace_id
@@ -8,6 +8,12 @@ resource "azurerm_container_app_environment" "main" {
   infrastructure_subnet_id = var.private_subnet_ids[0]  # Use first private subnet
   internal_load_balancer_enabled = false
 
+  zone_redundancy_enabled = false 
+  
+  workload_profile {
+    name                  = "Consumption"
+    workload_profile_type = "Consumption"
+  }
   tags = var.tags
 }
 
@@ -17,6 +23,15 @@ resource "azurerm_container_app" "main" {
   container_app_environment_id = azurerm_container_app_environment.main.id
   resource_group_name          = var.resource_group_name
   revision_mode                = "Single"
+
+  ingress {
+      external_enabled = false  # Only accessible within VNet
+      target_port      = 8080
+      traffic_weight {
+        percentage = 100
+        latest_revision = true
+      }
+  }
 
   template {
     container {
@@ -29,16 +44,7 @@ resource "azurerm_container_app" "main" {
         name  = "PORT"
         value = "8080"
       }
-    }
-
-    ingress {
-      external_enabled = false  # Only accessible within VNet
-      target_port      = 8080
-      traffic_weight {
-        percentage = 100
-        latest_revision = true
-      }
-    }
+    }    
   }
 
   # Restart policy

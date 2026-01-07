@@ -28,7 +28,7 @@ resource "azurerm_subnet" "private" {
   delegation {
     name = "container-apps"
     service_delegation {
-      name    = "Microsoft.AppPlatform/starter"
+      name    = "Microsoft.App/environments"
       actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
     }
   }
@@ -72,7 +72,6 @@ resource "azurerm_route_table" "public" {
   name                          = "public-route-table"
   location                      = var.location
   resource_group_name           = var.resource_group_name
-  disable_bgp_route_propagation = false
   tags                          = var.tags
 
   route {

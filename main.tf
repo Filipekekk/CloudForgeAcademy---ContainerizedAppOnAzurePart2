@@ -5,35 +5,25 @@ terraform {
       version = "~> 3.0"
     }
   }
-
-  # Remote state backend configuration using Azure Storage
-  # This replaces the AWS S3 + DynamoDB pattern:
-  # - Azure Storage Account acts as the state storage (equivalent to S3)
-  # - Azure Storage provides built-in locking/leasing capabilities (equivalent to DynamoDB)
-  # To enable, uncomment the following block and provide actual values:
-  /*
   backend "azurerm" {
-    resource_group_name  = "terraform-state-rg"
-    storage_account_name = "tfstatestorageaccount"
+    resource_group_name  = "static-website-rg"
+    storage_account_name = "tfstatefilip1767789663"
     container_name       = "tfstate"
     key                  = "prod.terraform.tfstate"
-    access_key           = "<storage-account-access-key>"  # Not recommended for production
-    # Or use SAS token, Managed Identity, or Service Principal for authentication
   }
-  */
+
 }
 
 # Configure the Microsoft Azure Provider
 provider "azurerm" {
   features {}
-
+  skip_provider_registration = true
   # Remote state backend configuration would go here
   # This replaces the AWS S3 + DynamoDB pattern
 }
 
 # Data source for current subscription to get tenant information
 data "azurerm_client_config" "current" {}
-
 
 # Create Resource Group
 resource "azurerm_resource_group" "main" {
@@ -44,12 +34,12 @@ resource "azurerm_resource_group" "main" {
 
 # Networking Module
 module "networking" {
-  source                = "./modules/networking"
-  resource_group_name   = azurerm_resource_group.main.name
-  location              = azurerm_resource_group.main.location
-  tags                  = var.tags
-  address_space         = var.address_space
-  public_subnet_prefixes = var.public_subnet_prefixes
+  source                  = "./modules/networking"
+  resource_group_name     = azurerm_resource_group.main.name
+  location                = azurerm_resource_group.main.location
+  tags                    = var.tags
+  address_space           = var.address_space
+  public_subnet_prefixes  = var.public_subnet_prefixes
   private_subnet_prefixes = var.private_subnet_prefixes
 }
 
@@ -63,25 +53,25 @@ module "logging" {
 
 # Container Apps Module
 module "container_app" {
-  source                    = "./modules/container_app"
-  resource_group_name       = azurerm_resource_group.main.name
-  location                  = azurerm_resource_group.main.location
-  tags                      = var.tags
-  container_image           = var.container_image
-  container_cpu             = var.container_cpu
-  container_memory          = var.container_memory
-  private_subnet_ids        = module.networking.private_subnet_ids
+  source                     = "./modules/container_app"
+  resource_group_name        = azurerm_resource_group.main.name
+  location                   = azurerm_resource_group.main.location
+  tags                       = var.tags
+  container_image            = var.container_image
+  container_cpu              = var.container_cpu
+  container_memory           = var.container_memory
+  private_subnet_ids         = module.networking.private_subnet_ids
   log_analytics_workspace_id = module.logging.workspace_id
 }
 
 # Application Gateway Module
 module "app_gateway" {
-  source              = "./modules/app"
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
-  tags                = var.tags
-  app_gateway_name    = var.app_gateway_name
-  public_subnet_ids   = module.networking.public_subnet_ids
+  source               = "./modules/app"
+  resource_group_name  = azurerm_resource_group.main.name
+  location             = azurerm_resource_group.main.location
+  tags                 = var.tags
+  app_gateway_name     = var.app_gateway_name
+  public_subnet_ids    = module.networking.public_subnet_ids
   backend_pool_address = module.container_app.container_app_url
 }
 
@@ -113,10 +103,6 @@ resource "azurerm_monitor_diagnostic_setting" "container_app_diagnostic" {
   name                       = "container-app-diagnostics"
   target_resource_id         = module.container_app.container_app_id
   log_analytics_workspace_id = module.logging.workspace_id
-
-  enabled_log {
-    category = "ContainerAppConsoleLogs"
-  }
 
   metric {
     category = "AllMetrics"
