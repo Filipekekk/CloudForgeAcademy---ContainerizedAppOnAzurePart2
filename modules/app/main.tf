@@ -20,6 +20,11 @@ resource "azurerm_application_gateway" "main" {
     capacity = 2
   }
 
+  ssl_policy {
+    policy_type = "Predefined"
+    policy_name = "AppGwSslPolicy20170401S"
+  }
+  
   gateway_ip_configuration {
     name      = "appGatewayIpConfig"
     subnet_id = var.public_subnet_ids[0]  # Use first public subnet
@@ -48,6 +53,7 @@ resource "azurerm_application_gateway" "main" {
     protocol              = "Http"
     request_timeout       = 60
     probe_name            = "health-probe"
+    pick_host_name_from_backend_address = true
   }
 
   http_listener {
@@ -63,6 +69,7 @@ resource "azurerm_application_gateway" "main" {
     http_listener_name         = "listener"
     backend_address_pool_name  = "backend_pool"
     backend_http_settings_name = "backend_http_settings"
+    priority                   = 10
   }
 
   probe {
