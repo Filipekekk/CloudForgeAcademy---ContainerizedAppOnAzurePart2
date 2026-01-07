@@ -25,8 +25,8 @@ resource "azurerm_container_app" "main" {
   revision_mode                = "Single"
 
   ingress {
-      external_enabled = false  # Only accessible within VNet
-      target_port      = 8080
+      external_enabled = true  # Only accessible within VNet
+      target_port      = 80
       traffic_weight {
         percentage = 100
         latest_revision = true
@@ -42,7 +42,7 @@ resource "azurerm_container_app" "main" {
 
       env {
         name  = "PORT"
-        value = "8080"
+        value = "80"
       }
     }    
   }

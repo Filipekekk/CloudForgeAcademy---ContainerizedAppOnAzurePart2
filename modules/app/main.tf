@@ -48,9 +48,9 @@ resource "azurerm_application_gateway" "main" {
   backend_http_settings {
     name                  = "backend_http_settings"
     cookie_based_affinity = "Disabled"
-    path                  = "/health"
-    port                  = 8080
-    protocol              = "Http"
+    path                  = "/"
+    port                  = 443
+    protocol              = "Https"
     request_timeout       = 60
     probe_name            = "health-probe"
     pick_host_name_from_backend_address = true
@@ -74,8 +74,8 @@ resource "azurerm_application_gateway" "main" {
 
   probe {
     name                = "health-probe"
-    protocol            = "Http"
-    path                = "/health"
+    protocol            = "Https"
+    path                = "/"
     interval            = 30
     timeout             = 120
     unhealthy_threshold = 3
